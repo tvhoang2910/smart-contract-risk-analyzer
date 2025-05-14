@@ -1,5 +1,5 @@
 package vn.techmaster.nowj.service;
 
-public enum DetectedRiskService {
+public interface DetectedRiskService {
 
 }
