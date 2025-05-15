@@ -4,8 +4,9 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import okhttp3.*;
+import vn.techmaster.nowj.model.dto.DetectedRiskDTO;
+
 import org.springframework.stereotype.Component;
-import vn.techmaster.nowj.dto.DetectedRiskDTO;
 
 import java.io.IOException;
 import java.util.List;

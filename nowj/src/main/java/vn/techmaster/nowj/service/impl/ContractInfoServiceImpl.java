@@ -9,9 +9,13 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
-import vn.techmaster.nowj.dto.DetectedRiskDTO;
 import vn.techmaster.nowj.entity.ContractInfo;
 import vn.techmaster.nowj.entity.DetectedRiskInfo;
+import vn.techmaster.nowj.error.AppException;
+import vn.techmaster.nowj.error.BadRequestException;
+import vn.techmaster.nowj.error.ResourceNotFoundException;
+import vn.techmaster.nowj.model.dto.DetectedRiskDTO;
+import vn.techmaster.nowj.model.response.ContractDetailResponseDTO;
 import vn.techmaster.nowj.repository.ContractInfoRepository;
 import vn.techmaster.nowj.repository.DetectedRiskRepository;
 import vn.techmaster.nowj.service.ContractInfoService;
@@ -58,12 +62,41 @@ public class ContractInfoServiceImpl implements ContractInfoService {
             contract.setDetectedRisks(riskInfos);
             detectedRiskRepository.saveAll(riskInfos);
             return contract;
-
         } catch (Exception e) {
             System.err.println("💥 Lỗi khi xử lý file: " + e.getMessage());
             e.printStackTrace();
-            throw new RuntimeException("Failed to process contract file", e);
+            throw new AppException("Failed to process contract file", e);
         }
     }
+
+    @Override
+    public ContractDetailResponseDTO getContractDetail(Long id) {
+        if (id == null) {
+            throw new BadRequestException("Contract ID cannot be null");
+        }
+
+        ContractInfo contract = contractInfoRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Contract", "id", id));
+
+        ContractDetailResponseDTO contractDetailResponseDTO = new ContractDetailResponseDTO();
+        contractDetailResponseDTO.setFilenameString(contract.getFilename());
+        List<DetectedRiskInfo> detectedRiskInfos = detectedRiskRepository.findAllByContract_Id(id);
+        List<DetectedRiskDTO> detectedRisks = new ArrayList<>();
+        for (DetectedRiskInfo riskInfo : detectedRiskInfos) {
+            DetectedRiskDTO detectedRiskDTO = modelMapper.map(riskInfo, DetectedRiskDTO.class);
+            detectedRisks.add(detectedRiskDTO);
+        }
+        contractDetailResponseDTO.setDetectedRisks(detectedRisks);
+        return contractDetailResponseDTO;
+    }
+
+    @Override
+    public void deleteContract(Long id) {
+        ContractInfo contract = contractInfoRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Contract", "id", id));
+        detectedRiskRepository.deleteAllByContract_Id(id);
+        contractInfoRepository.delete(contract);
+    }
+
 
 }
