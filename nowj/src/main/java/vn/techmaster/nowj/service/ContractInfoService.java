@@ -6,7 +6,9 @@ import vn.techmaster.nowj.entity.ContractInfo;
 import vn.techmaster.nowj.model.response.ContractDetailResponseDTO;
 
 public interface ContractInfoService {
-    ContractInfo saveContract(MultipartFile file);
+    ContractInfo saveContractFile(MultipartFile file);
+
+    ContractInfo saveContractImage(MultipartFile file);
 
     ContractDetailResponseDTO getContractDetail(Long id);
 

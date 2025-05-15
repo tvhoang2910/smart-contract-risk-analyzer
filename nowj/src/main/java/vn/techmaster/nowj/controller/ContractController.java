@@ -27,15 +27,27 @@ public class ContractController {
         this.contractInfoService = contractInfoService;
     }
 
-    @PostMapping("/upload")
+    @PostMapping("/upload-file")
     public ResponseEntity<?> uploadContract(@RequestParam("file") MultipartFile file) {
         ResponseDTO responseDTO = new ResponseDTO();
         if (file.isEmpty() || file.getSize() == 0 || file == null) {
             throw new BadRequestException("File is empty or invalid");
         }
-        ContractInfo saved = contractInfoService.saveContract(file);
+        ContractInfo saved = contractInfoService.saveContractFile(file);
         responseDTO.setData(saved);
         responseDTO.setMessage("Contract uploaded successfully");
+        return ResponseEntity.status(HttpStatus.OK).body(responseDTO);
+    }
+
+    @PostMapping("/upload-image")
+    public ResponseEntity<?> uploadImage(@RequestParam("image") MultipartFile file) {
+        ResponseDTO responseDTO = new ResponseDTO();
+        if (file.isEmpty() || file.getSize() == 0 || file == null) {
+            throw new BadRequestException("File is empty or invalid");
+        }
+        ContractInfo saved = contractInfoService.saveContractImage(file);
+        responseDTO.setData(saved);
+        responseDTO.setMessage("Image uploaded successfully");
         return ResponseEntity.status(HttpStatus.OK).body(responseDTO);
     }
 
@@ -43,7 +55,6 @@ public class ContractController {
     public ResponseEntity<?> getContractDetail(@PathVariable Long id) {
         ResponseDTO responseDTO = new ResponseDTO();
         ContractDetailResponseDTO contractDetailResponseDTO = contractInfoService.getContractDetail(id);
-        // ResourceNotFoundException được xử lý bởi GlobalExceptionHandler
         responseDTO.setData(contractDetailResponseDTO);
         responseDTO.setMessage("Get contract detail successfully");
         return ResponseEntity.status(HttpStatus.OK).body(responseDTO);
