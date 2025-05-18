@@ -15,7 +15,7 @@ import vn.techmaster.nowj.error.AppException;
 import vn.techmaster.nowj.error.BadRequestException;
 import vn.techmaster.nowj.error.ResourceNotFoundException;
 import vn.techmaster.nowj.model.dto.DetectedRiskDTO;
-import vn.techmaster.nowj.model.response.ContractDetailResponseDTO;
+// import vn.techmaster.nowj.model.response.ContractDetailResponseDTO;
 import vn.techmaster.nowj.repository.ContractInfoRepository;
 import vn.techmaster.nowj.repository.DetectedRiskRepository;
 import vn.techmaster.nowj.service.ContractInfoService;
@@ -74,24 +74,18 @@ public class ContractInfoServiceImpl implements ContractInfoService {
     }
 
     @Override
-    public ContractDetailResponseDTO getContractDetail(Long id) {
+    public List<DetectedRiskDTO> getContractDetail(Long id) {
         if (id == null) {
             throw new BadRequestException("Contract ID cannot be null");
         }
 
-        ContractInfo contract = contractInfoRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Contract", "id", id));
-
-        ContractDetailResponseDTO contractDetailResponseDTO = new ContractDetailResponseDTO();
-        contractDetailResponseDTO.setFilenameString(contract.getFilename());
         List<DetectedRiskInfo> detectedRiskInfos = detectedRiskRepository.findAllByContract_Id(id);
         List<DetectedRiskDTO> detectedRisks = new ArrayList<>();
         for (DetectedRiskInfo riskInfo : detectedRiskInfos) {
             DetectedRiskDTO detectedRiskDTO = modelMapper.map(riskInfo, DetectedRiskDTO.class);
             detectedRisks.add(detectedRiskDTO);
         }
-        contractDetailResponseDTO.setDetectedRisks(detectedRisks);
-        return contractDetailResponseDTO;
+        return detectedRisks;
     }
 
     @Override
@@ -131,6 +125,15 @@ public class ContractInfoServiceImpl implements ContractInfoService {
             e.printStackTrace();
             throw new AppException("Failed to process image contract file", e);
         }
+    }
+
+    @Override
+    public List<ContractInfo> getAllContracts() {
+        List<ContractInfo> contractInfos = contractInfoRepository.findAll();
+        if (contractInfos.isEmpty()) {
+            throw new ResourceNotFoundException("Contract", "id", null);
+        }
+        return contractInfos;
     }
 
 }

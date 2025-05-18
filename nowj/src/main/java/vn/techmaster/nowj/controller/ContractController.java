@@ -1,5 +1,7 @@
 package vn.techmaster.nowj.controller;
 
+import java.util.List;
+
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -13,7 +15,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import vn.techmaster.nowj.entity.ContractInfo;
 import vn.techmaster.nowj.error.BadRequestException;
-import vn.techmaster.nowj.model.response.ContractDetailResponseDTO;
+import vn.techmaster.nowj.model.dto.DetectedRiskDTO;
 import vn.techmaster.nowj.model.response.ResponseDTO;
 import vn.techmaster.nowj.service.ContractInfoService;
 
@@ -54,13 +56,13 @@ public class ContractController {
     @GetMapping("/conversation/{id}")
     public ResponseEntity<?> getContractDetail(@PathVariable Long id) {
         ResponseDTO responseDTO = new ResponseDTO();
-        ContractDetailResponseDTO contractDetailResponseDTO = contractInfoService.getContractDetail(id);
-        responseDTO.setData(contractDetailResponseDTO);
+        List<DetectedRiskDTO> detectedRiskInfos = contractInfoService.getContractDetail(id);
+        responseDTO.setData(detectedRiskInfos);
         responseDTO.setMessage("Get contract detail successfully");
         return ResponseEntity.status(HttpStatus.OK).body(responseDTO);
     }
 
-    @DeleteMapping("/{id}")
+    @DeleteMapping("/conversations/{id}")
     public ResponseEntity<?> deleteContract(@PathVariable Long id) {
         ResponseDTO responseDTO = new ResponseDTO();
         contractInfoService.deleteContract(id);

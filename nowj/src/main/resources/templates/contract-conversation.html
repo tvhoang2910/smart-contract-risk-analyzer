@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lịch Sử Phân Tích - NOWJ</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+    <!-- Custom CSS -->
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+    <style>
+        /* Thêm các class CSS tùy chỉnh nếu cần cho các loại rủi ro */
+        .bg-custom-orange {
+            background-color: #ff7f50 !important;
+            /* Màu cam san hô */
+            color: white !important;
+        }
+
+        .bg-custom-blue {
+            background-color: #007bff !important;
+            /* Màu xanh dương Bootstrap */
+            color: white !important;
+        }
+
+        /* Có thể thêm các màu khác cho các loại rủi ro khác nếu cần */
+        .bg-secondary {
+            /* Màu xám mặc định */
+            color: white !important;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="d-flex" id="wrapper">
+        <!-- Sidebar -->
+        <div class="bg-dark border-right" id="sidebar-wrapper">
+            <div class="sidebar-heading">
+                <img src="https://img.lovepik.com/free-png/20220119/lovepik-contract-icon-png-image_401503008_wh860.png"
+                    alt="NOWJ Logo" class="me-2 rounded-circle" style="width: 40px; height: 40px;"> NOWJ
+            </div>
+            <div class="list-group list-group-flush">
+                <a href="#" class="list-group-item list-group-item-action">
+                    <i class="fas fa-tachometer-alt"></i> Dashboard
+                </a>
+                <a href="/upload" class="list-group-item list-group-item-action">
+                    <i class="fas fa-cloud-upload-alt"></i> Tải Lên Hợp Đồng
+                </a>
+                <a href="/conversation" class="list-group-item list-group-item-action active">
+                    <i class="fas fa-list-check"></i> Danh sách hợp đồng
+                </a>
+                <a href="#" class="list-group-item list-group-item-action">
+                    <i class="fas fa-cogs"></i> Cài Đặt
+                </a>
+            </div>
+        </div>
+        <!-- /#sidebar-wrapper -->
+
+        <!-- History/Conversation List Wrapper -->
+        <div id="history-list-wrapper">
+            <div class="history-heading">
+                <i class="fas fa-history me-2"></i> Lịch sử phân tích
+            </div>
+            <div class="list-group list-group-flush" id="historyList">
+                <th:block th:each="contract : ${contractInfos}">
+                    <div class="d-flex align-items-center list-group-item list-group-item-action history-item"
+                        th:classappend="${selectedContractId != null and contract.getId().equals(selectedContractId)} ? 'active' : ''">
+                        <a th:href="@{'/conversation/' + ${contract.getId()}}"
+                            class="flex-grow-1 text-decoration-none text-dark">
+                            <h6 th:text="${contract.getFilename()}">Tên hợp đồng</h6>
+                        </a>
+                        <button type="button" class="btn btn-link text-danger p-0 ms-2 delete-contract-btn"
+                            th:attr="data-id=${contract.getId()}" title="Xóa hợp đồng" onclick="deleteContract(this)">
+                            <i class="fas fa-trash-alt"></i>
+                        </button>
+                    </div>
+                </th:block>
+            </div>
+        </div>
+        <!-- /#history-list-wrapper -->
+
+        <!-- Page Content -->
+        <div id="page-content-wrapper">
+            <nav class="navbar navbar-expand-lg navbar-light main-navbar px-3">
+                <button class="btn btn-outline-secondary me-3" id="sidebarToggle"><i class="fas fa-bars"></i></button>
+
+                <nav aria-label="breadcrumb">
+                    <ol class="breadcrumb mb-0">
+                        <li class="breadcrumb-item"><a href="#">Phân Tích Rủi Ro Hợp Đồng NOWJ</a></li>
+                        <li class="breadcrumb-item active" aria-current="page">Chi tiết rủi ro</li>
+                    </ol>
+                </nav>
+
+                <div class="ms-auto d-flex align-items-center">
+                    <span class="me-2">Chào, Admin</span>
+                    <img th:src="@{/images/user-avatar.png}" alt="User Avatar" class="user-avatar">
+                </div>
+            </nav>
+
+            <div class="container-fluid p-4 main-content-area">
+
+                <!-- Area to display detailed risk results - Controlled by Thymeleaf -->
+                <div id="riskDetailsContent">
+
+                    <!-- Trường hợp 1: Chưa chọn hợp đồng nào (khi vào /conversation) -->
+                    <div class="no-selection-message" th:if="${selectedContractId == null and error == null}">
+                        <i class="fas fa-hand-point-left me-2"></i> Chọn một hợp đồng từ danh sách bên trái để xem chi
+                        tiết
+                        rủi ro.
+                    </div>
+
+                    <!-- Trường hợp có lỗi (ví dụ: ID hợp đồng không tồn tại) -->
+                    <div class="alert alert-danger" role="alert" th:if="${error != null}">
+                        <i class="fas fa-exclamation-triangle me-2"></i> <span th:text="${error}"></span>
+                    </div>
+
+
+                    <!-- Trường hợp 2: Đã chọn hợp đồng, nhưng không có rủi ro nào được tìm thấy -->
+                    <div class="no-selection-message"
+                        th:if="${selectedContractId != null and error == null and (detectedRisks == null or #lists.isEmpty(detectedRisks))}">
+                        Không tìm thấy rủi ro nào cho hợp đồng <strong th:text="${selectedContractFilename}"></strong>
+                        này.
+                    </div>
+
+                    <!-- Trường hợp 3: Đã chọn hợp đồng VÀ có rủi ro -->
+                    <div id="contractRiskTable"
+                        th:if="${selectedContractId != null and error == null and detectedRisks != null and not #lists.isEmpty(detectedRisks)}">
+                        <h2 id="contractFileName" th:text="'Chi tiết rủi ro: ' + ${selectedContractFilename}">Chi tiết
+                            rủi
+                            ro: Tên File Hợp Đồng</h2>
+                        <div class="card risk-table-card">
+                            <div class="card-body p-0">
+                                <div class="table-responsive">
+                                    <table class="table table-striped table-hover mb-0">
+                                        <thead>
+                                            <tr>
+                                                <th scope="col">Số thứ tự</th>
+                                                <th scope="col">Mức độ nghiêm trọng</th>
+                                                <th scope="col">Phân loại rủi ro</th>
+                                                <th scope="col">Mô tả</th>
+                                                <th scope="col">Giải thích</th>
+                                                <th scope="col">Đoạn văn liên quan</th>
+                                                <th scope="col">Gợi ý</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <tr th:each="risk, iterStat : ${detectedRisks}">
+                                                <td th:text="${iterStat.count}"></td>
+                                                <td>
+                                                    <span class="badge"
+                                                        th:classappend="${#strings.toLowerCase(risk.severity) == 'HIGH' ? 'bg-custom-orange' :
+                                                                           (#strings.toLowerCase(risk.severity) == 'MEDIUM' ? 'bg-warning text-dark' :
+                                                                            (#strings.toLowerCase(risk.severity) == 'LOW' ? 'bg-info text-dark' : 'bg-secondary'))}"
+                                                        th:text="${risk.severity}"></span>
+                                                </td>
+                                                <td>
+                                                    <span class="badge"
+                                                        th:classappend="${#strings.toLowerCase(risk.category) == 'importing' ? 'bg-custom-blue' :
+                                                                           (#strings.toLowerCase(risk.category) == 'tài chính' ? 'bg-success' :
+                                                                            (#strings.toLowerCase(risk.category) == 'pháp lý' ? 'bg-secondary' :
+                                                                             (#strings.toLowerCase(risk.category) == 'hoạt động' ? 'bg-primary' : 'bg-secondary')))}"
+                                                        th:text="${risk.category}"></span>
+                                                </td>
+                                                <td th:text="${risk.description}"></td>
+                                                <td th:text="${risk.explanation}"></td>
+                                                <td th:text="${risk.relevantContext}"></td>
+                                                <td th:text="${risk.suggestion}"></td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Footer -->
+            <footer class="page-footer">
+                NOWJ Application © 05-2024
+                <div class="social-icons mt-2">
+                    <a href="#"><i class="fab fa-facebook-f"></i></a>
+                    <a href="#"><i class="fab fa-twitter"></i></a>
+                    <a href="#"><i class="fab fa-instagram"></i></a>
+                    <a href="#"><i class="fab fa-linkedin-in"></i></a>
+                </div>
+            </footer>
+        </div>
+        <!-- /#page-content-wrapper -->
+    </div>
+    <!-- /#wrapper -->
+
+    <!-- Bootstrap JS Bundle (Popper.js included) -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- Custom JS -->
+    <script>
+        document.getElementById("sidebarToggle").addEventListener("click", function () {
+            document.getElementById("wrapper").classList.toggle("toggled");
+        });
+
+        function deleteContract(btn) {
+            if (!confirm('Bạn có chắc chắn muốn xóa hợp đồng này?')) return;
+            const id = btn.getAttribute('data-id');
+            fetch('/contracts/conversations/' + id, {
+                method: 'DELETE'
+            })
+                .then(res => res.json())
+                .then(data => {
+                    window.location.href = '/conversation';
+                })
+                .catch(() => alert('Xóa thất bại!'));
+        }
+    </script>
+</body>
+
+</html>
