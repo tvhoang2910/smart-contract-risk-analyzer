@@ -3,3 +3,6 @@ nowj/mvnw
 nowj/mvnw.cmd
 nowj/.gitignore
 nowj/.gitattributes
+nowj/.vscode
+nowj/.idea
+nowj/target
