@@ -42,7 +42,7 @@
                     alt="NOWJ Logo" class="me-2 rounded-circle" style="width: 40px; height: 40px;"> NOWJ
             </div>
             <div class="list-group list-group-flush">
-                <a href="#" class="list-group-item list-group-item-action">
+                <a href="/dashboard" class="list-group-item list-group-item-action">
                     <i class="fas fa-tachometer-alt"></i> Dashboard
                 </a>
                 <a href="/upload" class="list-group-item list-group-item-action">
@@ -54,6 +54,9 @@
                 <a href="#" class="list-group-item list-group-item-action">
                     <i class="fas fa-cogs"></i> Cài Đặt
                 </a>
+                <a href="/logout" class="list-group-item list-group-item-action text-danger">
+                    <i class="fas fa-sign-out-alt"></i> Đăng xuất
+                </a>
             </div>
         </div>
         <!-- /#sidebar-wrapper -->
@@ -64,18 +67,26 @@
                 <i class="fas fa-history me-2"></i> Lịch sử phân tích
             </div>
             <div class="list-group list-group-flush" id="historyList">
-                <th:block th:each="contract : ${contractInfos}">
-                    <div class="d-flex align-items-center list-group-item list-group-item-action history-item"
-                        th:classappend="${selectedContractId != null and contract.getId().equals(selectedContractId)} ? 'active' : ''">
-                        <a th:href="@{'/conversation/' + ${contract.getId()}}"
-                            class="flex-grow-1 text-decoration-none text-dark">
-                            <h6 th:text="${contract.getFilename()}">Tên hợp đồng</h6>
-                        </a>
-                        <button type="button" class="btn btn-link text-danger p-0 ms-2 delete-contract-btn"
-                            th:attr="data-id=${contract.getId()}" title="Xóa hợp đồng" onclick="deleteContract(this)">
-                            <i class="fas fa-trash-alt"></i>
-                        </button>
+                <th:block th:if="${contractInfos == null or #lists.isEmpty(contractInfos)}">
+                    <div class="list-group-item text-center text-muted">
+                        <i class="fas fa-folder-open me-2"></i> Chưa có hợp đồng nào được lưu trữ.
                     </div>
+                </th:block>
+                <th:block th:if="${contractInfos != null and !#lists.isEmpty(contractInfos)}">
+                    <th:block th:each="contract : ${contractInfos}">
+                        <div class="d-flex align-items-center list-group-item list-group-item-action history-item"
+                            th:classappend="${selectedContractId != null and contract.getId().equals(selectedContractId)} ? 'active' : ''">
+                            <a th:href="@{'/conversation/' + ${contract.getId()}}"
+                                class="flex-grow-1 text-decoration-none text-dark">
+                                <h6 th:text="${contract.getFilename()}">Tên hợp đồng</h6>
+                            </a>
+                            <button type="button" class="btn btn-link text-danger p-0 ms-2 delete-contract-btn"
+                                th:attr="data-id=${contract.getId()}" title="Xóa hợp đồng"
+                                onclick="deleteContract(this)">
+                                <i class="fas fa-trash-alt"></i>
+                            </button>
+                        </div>
+                    </th:block>
                 </th:block>
             </div>
         </div>
@@ -104,32 +115,37 @@
                 <!-- Area to display detailed risk results - Controlled by Thymeleaf -->
                 <div id="riskDetailsContent">
 
-                    <!-- Trường hợp 1: Chưa chọn hợp đồng nào (khi vào /conversation) -->
-                    <div class="no-selection-message" th:if="${selectedContractId == null and error == null}">
-                        <i class="fas fa-hand-point-left me-2"></i> Chọn một hợp đồng từ danh sách bên trái để xem chi
-                        tiết
-                        rủi ro.
+                    <!-- Nếu không có hợp đồng nào -->
+                    <div class="alert alert-info text-center"
+                        th:if="${contractInfos == null or #lists.isEmpty(contractInfos)}">
+                        <i class="fas fa-info-circle me-2"></i> Hiện chưa có hợp đồng nào. Hãy tải lên hợp đồng để bắt
+                        đầu phân tích!
                     </div>
 
-                    <!-- Trường hợp có lỗi (ví dụ: ID hợp đồng không tồn tại) -->
+                    <!-- Nếu có lỗi -->
                     <div class="alert alert-danger" role="alert" th:if="${error != null}">
                         <i class="fas fa-exclamation-triangle me-2"></i> <span th:text="${error}"></span>
                     </div>
 
+                    <!-- Nếu chưa chọn hợp đồng nào và không có lỗi -->
+                    <div class="no-selection-message"
+                        th:if="${contractInfos != null and !#lists.isEmpty(contractInfos) and selectedContractId == null and error == null}">
+                        <i class="fas fa-hand-point-left me-2"></i> Chọn một hợp đồng từ danh sách bên trái để xem chi
+                        tiết rủi ro.
+                    </div>
 
-                    <!-- Trường hợp 2: Đã chọn hợp đồng, nhưng không có rủi ro nào được tìm thấy -->
+                    <!-- Nếu đã chọn hợp đồng nhưng không có rủi ro nào -->
                     <div class="no-selection-message"
                         th:if="${selectedContractId != null and error == null and (detectedRisks == null or #lists.isEmpty(detectedRisks))}">
                         Không tìm thấy rủi ro nào cho hợp đồng <strong th:text="${selectedContractFilename}"></strong>
                         này.
                     </div>
 
-                    <!-- Trường hợp 3: Đã chọn hợp đồng VÀ có rủi ro -->
+                    <!-- Nếu đã chọn hợp đồng và có rủi ro -->
                     <div id="contractRiskTable"
                         th:if="${selectedContractId != null and error == null and detectedRisks != null and not #lists.isEmpty(detectedRisks)}">
                         <h2 id="contractFileName" th:text="'Chi tiết rủi ro: ' + ${selectedContractFilename}">Chi tiết
-                            rủi
-                            ro: Tên File Hợp Đồng</h2>
+                            rủi ro: Tên File Hợp Đồng</h2>
                         <div class="card risk-table-card">
                             <div class="card-body p-0">
                                 <div class="table-responsive">

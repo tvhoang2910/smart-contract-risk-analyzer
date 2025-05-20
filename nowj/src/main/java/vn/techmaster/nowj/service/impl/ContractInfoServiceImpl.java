@@ -1,26 +1,29 @@
 package vn.techmaster.nowj.service.impl;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import org.apache.tika.Tika;
 import org.modelmapper.ModelMapper;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
-
 import vn.techmaster.nowj.entity.ContractInfo;
 import vn.techmaster.nowj.entity.DetectedRiskInfo;
+import vn.techmaster.nowj.entity.UserInfo;
 import vn.techmaster.nowj.error.AppException;
 import vn.techmaster.nowj.error.BadRequestException;
 import vn.techmaster.nowj.error.ResourceNotFoundException;
 import vn.techmaster.nowj.model.dto.DetectedRiskDTO;
-// import vn.techmaster.nowj.model.response.ContractDetailResponseDTO;
 import vn.techmaster.nowj.repository.ContractInfoRepository;
 import vn.techmaster.nowj.repository.DetectedRiskRepository;
+import vn.techmaster.nowj.repository.UserRepository;
 import vn.techmaster.nowj.service.ContractInfoService;
 import vn.techmaster.nowj.utils.AIDetectRisk;
 import vn.techmaster.nowj.utils.SmartTextExtractor;
+
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 
 @Service
 @Transactional
@@ -32,16 +35,18 @@ public class ContractInfoServiceImpl implements ContractInfoService {
     private final ModelMapper modelMapper;
     private final AIDetectRisk aiDetectRisk;
     private final SmartTextExtractor smartTextExtractor;
+    private final UserRepository userRepository;
 
     public ContractInfoServiceImpl(ContractInfoRepository contractInfoRepository, Tika tika,
             DetectedRiskRepository detectedRiskRepository, ModelMapper modelMapper, AIDetectRisk aiDetectRisk,
-            SmartTextExtractor smartTextExtractor) {
+            SmartTextExtractor smartTextExtractor, UserRepository userRepository) {
         this.contractInfoRepository = contractInfoRepository;
         this.tika = tika;
         this.detectedRiskRepository = detectedRiskRepository;
         this.modelMapper = modelMapper;
         this.aiDetectRisk = aiDetectRisk;
         this.smartTextExtractor = smartTextExtractor;
+        this.userRepository = userRepository;
     }
 
     @Override
@@ -49,23 +54,7 @@ public class ContractInfoServiceImpl implements ContractInfoService {
         try {
             String extractedText = tika.parseToString(file.getInputStream());
 
-            ContractInfo contract = new ContractInfo();
-            contract.setFilename(file.getOriginalFilename());
-            contract.setContentType(file.getContentType());
-            contract.setFileSize(file.getSize());
-            contract.setExtractedText(extractedText);
-            contractInfoRepository.save(contract);
-
-            List<DetectedRiskDTO> detectedRisks = aiDetectRisk.analyzeContractRisks(extractedText);
-            List<DetectedRiskInfo> riskInfos = new ArrayList<>();
-            for (DetectedRiskDTO risk : detectedRisks) {
-                DetectedRiskInfo riskInfo = modelMapper.map(risk, DetectedRiskInfo.class);
-                riskInfo.setContract(contract);
-                riskInfos.add(riskInfo);
-            }
-            contract.setDetectedRisks(riskInfos);
-            detectedRiskRepository.saveAll(riskInfos);
-            return contract;
+            return getContractInfo(extractedText, file);
         } catch (Exception e) {
             System.err.println("💥 Lỗi khi xử lý file: " + e.getMessage());
             e.printStackTrace();
@@ -101,25 +90,7 @@ public class ContractInfoServiceImpl implements ContractInfoService {
         try {
             String extractedText = smartTextExtractor.getTextFromImage(file);
 
-            ContractInfo contract = new ContractInfo();
-            contract.setFilename(file.getOriginalFilename());
-            contract.setContentType(file.getContentType());
-            contract.setFileSize(file.getSize());
-            contract.setExtractedText(extractedText);
-            contractInfoRepository.save(contract);
-
-            List<DetectedRiskDTO> detectedRisks = aiDetectRisk.analyzeContractRisks(extractedText);
-            List<DetectedRiskInfo> riskInfos = new ArrayList<>();
-            for (DetectedRiskDTO risk : detectedRisks) {
-                DetectedRiskInfo riskInfo = modelMapper.map(risk, DetectedRiskInfo.class);
-                riskInfo.setContract(contract);
-                riskInfos.add(riskInfo);
-            }
-
-            contract.setDetectedRisks(riskInfos);
-            detectedRiskRepository.saveAll(riskInfos);
-
-            return contract;
+            return getContractInfo(extractedText, file);
         } catch (Exception e) {
             System.err.println("💥 Lỗi khi xử lý ảnh: " + e.getMessage());
             e.printStackTrace();
@@ -134,6 +105,31 @@ public class ContractInfoServiceImpl implements ContractInfoService {
             throw new ResourceNotFoundException("Contract", "id", null);
         }
         return contractInfos;
+    }
+
+    private ContractInfo getContractInfo(String extractedText, MultipartFile file) throws IOException {
+        ContractInfo contract = new ContractInfo();
+        contract.setFilename(file.getOriginalFilename());
+        contract.setContentType(file.getContentType());
+        contract.setFileSize(file.getSize());
+        contract.setExtractedText(extractedText);
+
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        UserInfo user = userRepository.findByEmail(authentication.getName())
+                .orElseThrow(() -> new ResourceNotFoundException("User", "username", authentication.getName()));
+        contract.setUser(user);
+        contractInfoRepository.save(contract);
+
+        List<DetectedRiskDTO> detectedRisks = aiDetectRisk.analyzeContractRisks(extractedText);
+        List<DetectedRiskInfo> riskInfos = new ArrayList<>();
+        for (DetectedRiskDTO risk : detectedRisks) {
+            DetectedRiskInfo riskInfo = modelMapper.map(risk, DetectedRiskInfo.class);
+            riskInfo.setContract(contract);
+            riskInfos.add(riskInfo);
+        }
+        contract.setDetectedRisks(riskInfos);
+        detectedRiskRepository.saveAll(riskInfos);
+        return contract;
     }
 
 }

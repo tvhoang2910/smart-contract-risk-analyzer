@@ -1,20 +1,14 @@
 package vn.techmaster.nowj.entity;
 
-import java.util.ArrayList;
-import java.util.List;
-
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
-
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.FetchType;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.OneToMany;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
+
+import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Table(name = "contracts")
@@ -37,7 +31,21 @@ public class ContractInfo {
     @Column(name = "extracted_text", columnDefinition = "TEXT")
     private String extractedText;
 
+    @Column(name = "created_date", nullable = false)
+    private LocalDateTime createdDate;
+
     @OneToMany(mappedBy = "contract", fetch = FetchType.LAZY)
     @JsonManagedReference
     private List<DetectedRiskInfo> detectedRisks = new ArrayList<>();
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id", nullable = false)
+    @JsonBackReference
+    private UserInfo user;
+
+    @PrePersist
+    protected void onCreate() {
+        this.createdDate = LocalDateTime.now();
+    }
+
 }
