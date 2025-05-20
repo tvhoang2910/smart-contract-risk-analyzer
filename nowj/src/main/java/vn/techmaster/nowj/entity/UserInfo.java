@@ -28,11 +28,17 @@ public class UserInfo {
     private String password;
 
     @Column(name = "provider")
+    /**
+     * Tên provider xác thực (ví dụ: 'google', 'facebook', 'github', 'local')
+     */
     private String provider;
 
-    @Column(name = "provider_id")// "google", "facebook", "github", "local"
+    @Column(name = "provider_id")
+    /**
+     * ID từ provider (Google ID, Facebook ID, v.v.). Nếu là local thì có thể null.
+     */
     private String providerId;
-    // ID từ provider (Google ID, Facebook ID...)
+
     @Column(name = "role")
     private String role = "USER";
 
@@ -50,6 +56,7 @@ public class UserInfo {
     protected void onCreate() {
         this.createdDate = LocalDateTime.now();
     }
+
     @PreUpdate
     protected void onUpdate() {
         this.lastLogin = LocalDateTime.now();
