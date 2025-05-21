@@ -3,3 +3,5 @@ nowj/mvnw
 nowj/mvnw.cmd
 nowj/.gitignore
 nowj/.gitattributes
+nowj/target
+nowj/.vscode/settings.json
