@@ -87,14 +87,20 @@ public class ContractInfoServiceImpl implements ContractInfoService {
 
     @Override
     public ContractInfo saveContractImage(MultipartFile file) {
+        String extractedText;
         try {
-            String extractedText = smartTextExtractor.getTextFromImage(file);
-
-            return getContractInfo(extractedText, file);
-        } catch (Exception e) {
+            extractedText = smartTextExtractor.getTextFromImage(file);
+        } catch (RuntimeException e) {
             System.err.println("💥 Lỗi khi xử lý ảnh: " + e.getMessage());
             e.printStackTrace();
             throw new AppException("Failed to process image contract file", e);
+        }
+        try {
+            return getContractInfo(extractedText, file);
+        } catch (IOException e) {
+            System.err.println("💥 Lỗi khi lưu hợp đồng: " + e.getMessage());
+            e.printStackTrace();
+            throw new AppException("Failed to save contract info", e);
         }
     }
 
