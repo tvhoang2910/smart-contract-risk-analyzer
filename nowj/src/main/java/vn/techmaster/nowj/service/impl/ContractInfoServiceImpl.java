@@ -15,7 +15,6 @@ import vn.techmaster.nowj.error.BadRequestException;
 import vn.techmaster.nowj.error.ResourceNotFoundException;
 import vn.techmaster.nowj.model.dto.DetectedRiskDTO;
 import vn.techmaster.nowj.repository.ContractInfoRepository;
-import vn.techmaster.nowj.repository.DetectedRiskRepository;
 import vn.techmaster.nowj.repository.UserRepository;
 import vn.techmaster.nowj.service.ContractInfoService;
 import vn.techmaster.nowj.utils.AIDetectRisk;
@@ -25,24 +24,22 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
+@SuppressWarnings("CallToPrintStackTrace")
 @Service
 @Transactional
 public class ContractInfoServiceImpl implements ContractInfoService {
 
     private final ContractInfoRepository contractInfoRepository;
-    private final DetectedRiskRepository detectedRiskRepository;
     private final Tika tika;
     private final ModelMapper modelMapper;
     private final AIDetectRisk aiDetectRisk;
     private final SmartTextExtractor smartTextExtractor;
     private final UserRepository userRepository;
 
-    public ContractInfoServiceImpl(ContractInfoRepository contractInfoRepository, Tika tika,
-            DetectedRiskRepository detectedRiskRepository, ModelMapper modelMapper, AIDetectRisk aiDetectRisk,
-            SmartTextExtractor smartTextExtractor, UserRepository userRepository) {
+    public ContractInfoServiceImpl(ContractInfoRepository contractInfoRepository, Tika tika, ModelMapper modelMapper,
+            AIDetectRisk aiDetectRisk, SmartTextExtractor smartTextExtractor, UserRepository userRepository) {
         this.contractInfoRepository = contractInfoRepository;
         this.tika = tika;
-        this.detectedRiskRepository = detectedRiskRepository;
         this.modelMapper = modelMapper;
         this.aiDetectRisk = aiDetectRisk;
         this.smartTextExtractor = smartTextExtractor;
@@ -68,7 +65,10 @@ public class ContractInfoServiceImpl implements ContractInfoService {
             throw new BadRequestException("Contract ID cannot be null");
         }
 
-        List<DetectedRiskInfo> detectedRiskInfos = detectedRiskRepository.findAllByContract_Id(id);
+        ContractInfo contract = contractInfoRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Contract", "id", id));
+        List<DetectedRiskInfo> detectedRiskInfos = contract.getDetectedRisks();
+
         List<DetectedRiskDTO> detectedRisks = new ArrayList<>();
         for (DetectedRiskInfo riskInfo : detectedRiskInfos) {
             DetectedRiskDTO detectedRiskDTO = modelMapper.map(riskInfo, DetectedRiskDTO.class);
@@ -81,7 +81,6 @@ public class ContractInfoServiceImpl implements ContractInfoService {
     public void deleteContract(Long id) {
         ContractInfo contract = contractInfoRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Contract", "id", id));
-        detectedRiskRepository.deleteAllByContract_Id(id);
         contractInfoRepository.delete(contract);
     }
 
@@ -100,11 +99,11 @@ public class ContractInfoServiceImpl implements ContractInfoService {
 
     @Override
     public List<ContractInfo> getAllContracts() {
-        List<ContractInfo> contractInfos = contractInfoRepository.findAll();
-        if (contractInfos.isEmpty()) {
-            throw new ResourceNotFoundException("Contract", "id", null);
-        }
-        return contractInfos;
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        UserInfo user = userRepository.findByEmail(authentication.getName())
+                .orElseThrow(() -> new ResourceNotFoundException("User", "username", authentication.getName()));
+        // Trả về danh sách hợp đồng của user hiện tại, không ném lỗi nếu rỗng
+        return user.getContracts();
     }
 
     private ContractInfo getContractInfo(String extractedText, MultipartFile file) throws IOException {
@@ -118,7 +117,6 @@ public class ContractInfoServiceImpl implements ContractInfoService {
         UserInfo user = userRepository.findByEmail(authentication.getName())
                 .orElseThrow(() -> new ResourceNotFoundException("User", "username", authentication.getName()));
         contract.setUser(user);
-        contractInfoRepository.save(contract);
 
         List<DetectedRiskDTO> detectedRisks = aiDetectRisk.analyzeContractRisks(extractedText);
         List<DetectedRiskInfo> riskInfos = new ArrayList<>();
@@ -128,8 +126,7 @@ public class ContractInfoServiceImpl implements ContractInfoService {
             riskInfos.add(riskInfo);
         }
         contract.setDetectedRisks(riskInfos);
-        detectedRiskRepository.saveAll(riskInfos);
-        return contract;
+        return contractInfoRepository.save(contract);
     }
 
 }

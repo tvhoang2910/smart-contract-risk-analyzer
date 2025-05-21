@@ -22,6 +22,9 @@ public class UserServiceImpl implements UserService {
         if (userRepository.existsByEmail(registrationRequest.getEmail())) {
             throw new IllegalArgumentException("Email already exists!");
         }
+        if (!registrationRequest.getPassword().equals(registrationRequest.getConfirmPassword())) {
+            throw new IllegalArgumentException("Mật khẩu và xác nhận mật khẩu không khớp!");
+        }
         UserInfo user = new UserInfo();
         user.setEmail(registrationRequest.getEmail());
         user.setName(registrationRequest.getFullName());

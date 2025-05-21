@@ -18,7 +18,7 @@ public class NowjApplication {
 	public void openBrowser() {
 		try {
 			Thread.sleep(2000);
-			String url = "http://localhost:8080/login";
+			String url = "http://localhost:8080/";
 			String chromePath = "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe";
 			new ProcessBuilder(chromePath, url).start();
 		} catch (Exception ignored) {

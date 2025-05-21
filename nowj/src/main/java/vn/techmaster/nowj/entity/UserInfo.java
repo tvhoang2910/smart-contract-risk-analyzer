@@ -33,17 +33,12 @@ public class UserInfo {
     @Column(name = "last_login")
     private LocalDateTime lastLogin;
 
-    @OneToMany(mappedBy = "user", fetch = FetchType.LAZY)
+    @OneToMany(mappedBy = "user", fetch = FetchType.LAZY, cascade = CascadeType.ALL,orphanRemoval = true)
     @JsonManagedReference
     private List<ContractInfo> contracts = new ArrayList<>();
 
     @PrePersist
     protected void onCreate() {
         this.createdDate = LocalDateTime.now();
-    }
-
-    @PreUpdate
-    protected void onUpdate() {
-        this.lastLogin = LocalDateTime.now();
     }
 }

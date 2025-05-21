@@ -34,7 +34,7 @@ public class ContractInfo {
     @Column(name = "created_date", nullable = false)
     private LocalDateTime createdDate;
 
-    @OneToMany(mappedBy = "contract", fetch = FetchType.LAZY)
+    @OneToMany(mappedBy = "contract", fetch = FetchType.LAZY, cascade = CascadeType.ALL,orphanRemoval = true)
     @JsonManagedReference
     private List<DetectedRiskInfo> detectedRisks = new ArrayList<>();
 

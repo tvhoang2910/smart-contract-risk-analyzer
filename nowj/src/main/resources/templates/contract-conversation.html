@@ -166,9 +166,9 @@
                                                 <td th:text="${iterStat.count}"></td>
                                                 <td>
                                                     <span class="badge"
-                                                        th:classappend="${#strings.toLowerCase(risk.severity) == 'HIGH' ? 'bg-custom-orange' :
-                                                                           (#strings.toLowerCase(risk.severity) == 'MEDIUM' ? 'bg-warning text-dark' :
-                                                                            (#strings.toLowerCase(risk.severity) == 'LOW' ? 'bg-info text-dark' : 'bg-secondary'))}"
+                                                        th:classappend="${#strings.toLowerCase(risk.severity) == 'high' ? 'bg-danger' :
+                                                                           (#strings.toLowerCase(risk.severity) == 'medium' ? 'bg-warning text-dark' :
+                                                                            (#strings.toLowerCase(risk.severity) == 'low' ? 'bg-success' : 'bg-secondary'))}"
                                                         th:text="${risk.severity}"></span>
                                                 </td>
                                                 <td>
