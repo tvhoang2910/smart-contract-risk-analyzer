@@ -1,0 +1,14 @@
+{
+    "configurations": [
+        {
+            "type": "java",
+            "name": "Spring Boot-NowjApplication<nowj>",
+            "request": "launch",
+            "cwd": "${workspaceFolder}",
+            "mainClass": "vn.techmaster.nowj.NowjApplication",
+            "projectName": "nowj",
+            "args": "",
+            "envFile": "${workspaceFolder}/.env"
+        }
+    ]
+}

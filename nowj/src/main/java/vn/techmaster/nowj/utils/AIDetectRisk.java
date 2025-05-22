@@ -80,7 +80,8 @@ public class AIDetectRisk {
         }
     }
 
-    private String extractJsonArray(String text) {
+    // Đổi thành public để test JUnit truy cập được
+    public String extractJsonArray(String text) {
         int start = text.indexOf('[');
         int end = text.lastIndexOf(']');
         if (start != -1 && end > start) {
