@@ -102,8 +102,7 @@ public class ContractInfoServiceImpl implements ContractInfoService {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         UserInfo user = userRepository.findByEmail(authentication.getName())
                 .orElseThrow(() -> new ResourceNotFoundException("User", "username", authentication.getName()));
-        // Trả về danh sách hợp đồng của user hiện tại, không ném lỗi nếu rỗng
-        return user.getContracts();
+        return user.getContracts().reversed();
     }
 
     private ContractInfo getContractInfo(String extractedText, MultipartFile file) throws IOException {
@@ -127,6 +126,23 @@ public class ContractInfoServiceImpl implements ContractInfoService {
         }
         contract.setDetectedRisks(riskInfos);
         return contractInfoRepository.save(contract);
+    }
+
+    @Override
+    public Integer getAllLowRisks() {
+        return contractInfoRepository.countByDetectedRisks_Severity("LOW");
+    }
+
+    @Override
+    public Integer getAllMediumRisks() {
+        return contractInfoRepository.countByDetectedRisks_Severity("MEDIUM");
+
+    }
+
+    @Override
+    public Integer getAllHighRisks() {
+        return contractInfoRepository.countByDetectedRisks_Severity("HIGH");
+
     }
 
 }

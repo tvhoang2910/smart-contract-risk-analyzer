@@ -18,4 +18,10 @@ public interface ContractInfoService {
 
     List<ContractInfo> getAllContracts();
 
+    Integer getAllLowRisks();
+
+    Integer getAllMediumRisks();
+
+    Integer getAllHighRisks();
+
 }

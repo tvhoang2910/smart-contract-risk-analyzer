@@ -20,6 +20,17 @@ public class ViewController {
         this.contractInfoService = contractInfoService;
     }
 
+    @GetMapping("/dashboard")
+    public String getDashboardPage(Model model) {
+        model.addAttribute("contractCount", contractInfoService.getAllContracts().size());
+        model.addAttribute("recentContracts", contractInfoService.getAllContracts());
+        model.addAttribute("lowRisksCount", contractInfoService.getAllLowRisks());
+        model.addAttribute("mediumRisksCount", contractInfoService.getAllMediumRisks());
+        model.addAttribute("highRisksCount", contractInfoService.getAllHighRisks());
+
+        return "dashboard";
+    }
+
     @GetMapping("/upload")
     public String getUploadPage() {
         return "contract-upload";
@@ -27,17 +38,15 @@ public class ViewController {
 
     @GetMapping("/conversation")
     public String getConversationPage(Model model) {
-        List<ContractInfo> contractInfos = contractInfoService.getAllContracts();
-        model.addAttribute("contractInfos", contractInfos);
+        model.addAttribute("contractInfos", contractInfoService.getAllContracts());
         return "contract-conversation";
     }
 
     @GetMapping("/conversation/{id}")
     public String getConversationDetailPage(Model model, @PathVariable Long id) {
-        List<ContractInfo> contractInfos = contractInfoService.getAllContracts();
-        model.addAttribute("contractInfos", contractInfos);
+        model.addAttribute("contractInfos", contractInfoService.getAllContracts());
 
-        Optional<ContractInfo> selectedContractOpt = contractInfos.stream()
+        Optional<ContractInfo> selectedContractOpt = contractInfoService.getAllContracts().stream()
                 .filter(c -> c.getId().equals(id))
                 .findFirst();
 
@@ -52,5 +61,10 @@ public class ViewController {
             model.addAttribute("error", "Không tìm thấy hợp đồng với ID: " + id);
         }
         return "contract-conversation";
+    }
+
+    @GetMapping("/settings")
+    public String getSettingsPage() {
+        return "settings";
     }
 }
