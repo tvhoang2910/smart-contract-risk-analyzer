@@ -1,9 +1,10 @@
 {
+    "version": "0.2.0",
     "configurations": [
         {
             "type": "java",
-            "name": "Spring Boot-NowjApplication<nowj>",
             "request": "launch",
+            "name": "Spring Boot-NowjApplication<nowj>",
             "cwd": "${workspaceFolder}",
             "mainClass": "vn.techmaster.nowj.NowjApplication",
             "projectName": "nowj",

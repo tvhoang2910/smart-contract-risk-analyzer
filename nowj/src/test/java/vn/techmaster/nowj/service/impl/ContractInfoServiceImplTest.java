@@ -160,4 +160,39 @@ class ContractInfoServiceImplTest {
         when(contractInfoRepository.findAll()).thenReturn(Collections.emptyList());
         assertThrows(ResourceNotFoundException.class, () -> contractInfoService.getAllContracts());
     }
+
+    @Test
+    void getContractDetail_shouldThrowResourceNotFoundException_whenContractNotExists() {
+        when(contractInfoRepository.findById(2L)).thenReturn(Optional.empty());
+        assertThrows(ResourceNotFoundException.class, () -> contractInfoService.getContractDetail(2L));
+    }
+
+    @Test
+    void getAllContracts_shouldThrowResourceNotFoundException_whenUserNotExists() {
+        when(authentication.getName()).thenReturn("nouser@a.com");
+        SecurityContextHolder.getContext().setAuthentication(authentication);
+        when(userRepository.findByEmail(anyString())).thenReturn(Optional.empty());
+        assertThrows(ResourceNotFoundException.class, () -> contractInfoService.getAllContracts());
+    }
+
+    @Test
+    void saveContractFile_shouldReturnContractInfo_withDetectedRisks() throws Exception {
+        when(multipartFile.getInputStream()).thenReturn(new ByteArrayInputStream("test".getBytes()));
+        when(tika.parseToString(any(java.io.InputStream.class))).thenReturn("contract text");
+        when(multipartFile.getOriginalFilename()).thenReturn("file.pdf");
+        when(multipartFile.getContentType()).thenReturn("application/pdf");
+        when(multipartFile.getSize()).thenReturn(123L);
+        UserInfo user = new UserInfo(); user.setEmail("test@a.com");
+        when(authentication.getName()).thenReturn("test@a.com");
+        SecurityContextHolder.getContext().setAuthentication(authentication);
+        when(userRepository.findByEmail(anyString())).thenReturn(Optional.of(user));
+        when(contractInfoRepository.save(any())).thenAnswer(i -> i.getArgument(0));
+        DetectedRiskDTO riskDTO = new DetectedRiskDTO();
+        when(aiDetectRisk.analyzeContractRisks(anyString())).thenReturn(List.of(riskDTO));
+        // Act
+        ContractInfo result = contractInfoService.saveContractFile(multipartFile);
+        // Assert
+        assertNotNull(result.getDetectedRisks());
+        assertEquals(1, result.getDetectedRisks().size());
+    }
 }
