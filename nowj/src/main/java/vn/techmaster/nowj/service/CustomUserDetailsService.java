@@ -1,6 +1,7 @@
-package vn.techmaster.nowj.service; // Thay đổi tên package phù hợp
+package vn.techmaster.nowj.service;
 
-import vn.techmaster.nowj.entity.UserInfo; // Sử dụng UserInfo
+import vn.techmaster.nowj.entity.UserInfo;
+import vn.techmaster.nowj.entity.RoleInfo;
 import vn.techmaster.nowj.repository.UserRepository;
 
 import org.springframework.security.core.GrantedAuthority;
@@ -8,14 +9,12 @@ import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
-import org.springframework.stereotype.Service;
-import java.util.Collections;
 import java.util.List;
+import java.util.stream.Collectors;
 
-@Service
 public class CustomUserDetailsService implements UserDetailsService {
 
-    private final UserRepository userRepository; // Sử dụng UserRepository phù hợp
+    private final UserRepository userRepository;
 
     public CustomUserDetailsService(UserRepository userRepository) {
         this.userRepository = userRepository;
@@ -26,14 +25,19 @@ public class CustomUserDetailsService implements UserDetailsService {
         UserInfo user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new UsernameNotFoundException("User not found with email: " + email));
 
-        // Tạo một danh sách GrantedAuthority cố định cho role "ROLE_USER"
-        List<GrantedAuthority> authorities = Collections.singletonList(new SimpleGrantedAuthority("ROLE_USER"));
+        List<RoleInfo> roles = user.getRoles();
+        if (roles == null) {
+            roles = List.of();
+        }
+        List<GrantedAuthority> authorities = roles.stream()
+                .map(RoleInfo::getCode)
+                .map(code -> "ROLE_" + code)
+                .map(SimpleGrantedAuthority::new)
+                .collect(Collectors.toList());
 
-        // Tạo UserDetails từ thông tin User entity và role cố định
         return new org.springframework.security.core.userdetails.User(
-                user.getEmail(), // Email là username
-                user.getPassword(), // Mật khẩu đã mã hóa
-                authorities // Danh sách role cố định
-        );
+                user.getEmail(),
+                user.getPassword(),
+                authorities);
     }
 }
