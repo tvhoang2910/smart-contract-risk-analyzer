@@ -1,22 +1,24 @@
 package vn.techmaster.nowj.security;
 
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+
+import java.util.Optional;
+
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.security.core.Authentication;
-import vn.techmaster.nowj.entity.UserInfo;
-import vn.techmaster.nowj.repository.UserRepository;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-
-import java.time.LocalDateTime;
-import java.util.Optional;
-
-import static org.mockito.Mockito.*;
+import vn.techmaster.nowj.entity.UserInfo;
+import vn.techmaster.nowj.repository.UserRepository;
 
 @ExtendWith(MockitoExtension.class)
 class CustomAuthenticationSuccessHandlerTest {

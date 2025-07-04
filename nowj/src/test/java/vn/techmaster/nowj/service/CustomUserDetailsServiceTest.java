@@ -1,25 +1,29 @@
 package vn.techmaster.nowj.service;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.when;
+
+import java.util.Optional;
+
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
+
 import vn.techmaster.nowj.entity.UserInfo;
 import vn.techmaster.nowj.repository.UserRepository;
-import vn.techmaster.nowj.service.CustomUserDetailsService;
-
-import java.util.Optional;
-
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 class CustomUserDetailsServiceTest {
-    @Mock UserRepository userRepository;
-    @InjectMocks CustomUserDetailsService customUserDetailsService;
+    @Mock
+    UserRepository userRepository;
+    @InjectMocks
+    CustomUserDetailsService customUserDetailsService;
 
     @Test
     void loadUserByUsername_success() {
@@ -36,6 +40,7 @@ class CustomUserDetailsServiceTest {
     @Test
     void loadUserByUsername_notFound_throwsException() {
         when(userRepository.findByEmail(anyString())).thenReturn(Optional.empty());
-        assertThrows(UsernameNotFoundException.class, () -> customUserDetailsService.loadUserByUsername("notfound@email.com"));
+        assertThrows(UsernameNotFoundException.class,
+                () -> customUserDetailsService.loadUserByUsername("notfound@email.com"));
     }
 }

@@ -1,7 +1,5 @@
 package vn.techmaster.nowj.controller;
 
-import java.util.List;
-
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult; // Import BindingResult
@@ -11,20 +9,16 @@ import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
 
 import jakarta.validation.Valid; // Import @Valid
-import vn.techmaster.nowj.entity.ContractInfo;
 import vn.techmaster.nowj.model.dto.RegistrationRequestDTO;
-import vn.techmaster.nowj.service.ContractInfoService;
 import vn.techmaster.nowj.service.UserService;
 
 @Controller
 public class AuthController {
 
     private final UserService userService;
-    private final ContractInfoService contractInfoService;
 
-    public AuthController(UserService userService, ContractInfoService contractInfoService) {
+    public AuthController(UserService userService) {
         this.userService = userService;
-        this.contractInfoService = contractInfoService;
     }
 
     @GetMapping("/login")
