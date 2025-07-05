@@ -39,6 +39,7 @@ public class SecurityConfig {
         http
                 .csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(authorize -> authorize
+                        .requestMatchers("/dashboard").hasRole("ADMIN")
                         .requestMatchers("/register", "/login").permitAll()
                         .anyRequest().authenticated())
                 .formLogin(form -> form
@@ -47,14 +48,15 @@ public class SecurityConfig {
                         .passwordParameter("j_password")
                         .loginProcessingUrl("/j_spring_security_check")
                         .successHandler(myAuthenticationSuccessHandler())
-                        .defaultSuccessUrl("/dashboard", true)
                         .failureUrl("/login?incorrectAccount")
                         .permitAll())
                 .logout(logout -> logout
                         .logoutUrl("/logout")
                         .deleteCookies("JSESSIONID"))
                 .exceptionHandling(exception -> exception
-                        .accessDeniedPage("/access-denied"))
+                        .accessDeniedHandler((request, response, accessDeniedException) -> {
+                            response.sendRedirect("/login?notAuthorized");
+                        }))
                 .sessionManagement(session -> session
                         .maximumSessions(1)
                         .expiredUrl("/login?sessionTimeout"));

@@ -35,12 +35,9 @@ public class CustomSuccessHandler extends SimpleUrlAuthenticationSuccessHandler 
     public String determineTargetUrl(Authentication authentication) {
         String url = "";
         List<String> roles = SecurityUtils.getAuthorities();
-        if (isUser(roles)) {
-            url = SystemConstant.HOME;
-        } else if (isAdmin(roles)) {
+        if (isAdmin(roles)) {
             url = SystemConstant.ADMIN_HOME;
         } else {
-            // Default redirect if no specific role
             url = SystemConstant.HOME;
         }
         return url;
