@@ -2,6 +2,8 @@ package vn.techmaster.nowj.config;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
@@ -10,8 +12,9 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
-import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
-import vn.techmaster.nowj.security.CustomSuccessHandler;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import vn.techmaster.nowj.security.JwtAuthenticationEntryPoint;
+import vn.techmaster.nowj.security.JwtAuthenticationFilter;
 import vn.techmaster.nowj.service.impl.CustomUserDetailService;
 
 @Configuration
@@ -30,36 +33,32 @@ public class SecurityConfig {
     }
 
     @Bean
-    public AuthenticationSuccessHandler myAuthenticationSuccessHandler() {
-        return new CustomSuccessHandler();
+    public AuthenticationManager authenticationManager(AuthenticationConfiguration config) throws Exception {
+        return config.getAuthenticationManager();
     }
 
     @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-        http
+    public SecurityFilterChain securityFilterChain(HttpSecurity http,
+            JwtAuthenticationFilter jwtAuthenticationFilter,
+            JwtAuthenticationEntryPoint jwtAuthenticationEntryPoint) throws Exception {
+        return http
                 .csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(authorize -> authorize
-                        .requestMatchers("/dashboard").hasRole("ADMIN")
-                        .requestMatchers("/register", "/login").permitAll()
+                        // Public endpoints
+                        .requestMatchers("/css/**", "/js/**", "/images/**").permitAll()
+                        .requestMatchers("/login", "/register", "/logout").permitAll()
+                        .requestMatchers("/").permitAll()
+                        .requestMatchers("/api/auth/**").permitAll()
+                        .requestMatchers("/api/test/public").permitAll()
+                        // Admin only endpoints
+                        .requestMatchers("/api/test/admin").hasRole("ADMIN")
+                        // Authenticated endpoints - any authenticated user can access
+                        .requestMatchers("/dashboard", "/upload", "/conversation/**", "/settings").authenticated()
+                        // All other endpoints require authentication
                         .anyRequest().authenticated())
-                .formLogin(form -> form
-                        .loginPage("/login")
-                        .usernameParameter("j_username")
-                        .passwordParameter("j_password")
-                        .loginProcessingUrl("/j_spring_security_check")
-                        .successHandler(myAuthenticationSuccessHandler())
-                        .failureUrl("/login?incorrectAccount")
-                        .permitAll())
-                .logout(logout -> logout
-                        .logoutUrl("/logout")
-                        .deleteCookies("JSESSIONID"))
-                .exceptionHandling(exception -> exception
-                        .accessDeniedHandler((request, response, accessDeniedException) -> {
-                            response.sendRedirect("/login?notAuthorized");
-                        }))
-                .sessionManagement(session -> session
-                        .maximumSessions(1)
-                        .expiredUrl("/login?sessionTimeout"));
-        return http.build();
+                .exceptionHandling(exceptions -> exceptions
+                        .authenticationEntryPoint(jwtAuthenticationEntryPoint))
+                .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
+                .build();
     }
 }

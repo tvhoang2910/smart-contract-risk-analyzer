@@ -177,6 +177,13 @@
             border: 1px solid #c3e6cb;
         }
 
+        .error-message {
+            color: #dc3545;
+            font-size: 12px;
+            margin-top: 5px;
+            display: block;
+        }
+
         /* Responsive cho màn hình nhỏ hơn */
         @media (max-width: 768px) {
             body {
@@ -226,9 +233,15 @@
             <h2 class="form-title">Đăng Nhập</h2>
 
             <!-- Hiển thị thông báo lỗi nếu có -->
+            <div th:if="${error}" class="alert alert-danger">
+                <span th:text="${error}">Email hoặc mật khẩu không chính xác!</span>
+            </div>
+
+            <!-- Hiển thị thông báo lỗi auth nếu có -->
             <div th:if="${param.error}" class="alert alert-danger">
                 <span>Email hoặc mật khẩu không chính xác!</span>
             </div>
+
             <!-- Hiển thị thông báo không được phép truy cập nếu có -->
             <div th:if="${param.notAuthorized}" class="alert alert-danger">
                 <span>Bạn không có quyền truy cập! (You are not authorized)</span>
@@ -240,19 +253,26 @@
             </div>
 
             <!-- Hiển thị thông báo đăng ký thành công nếu có -->
+            <div th:if="${successMessage}" class="alert alert-success">
+                <span th:text="${successMessage}">Đăng ký thành công! Vui lòng đăng nhập.</span>
+            </div>
+
+            <!-- Hiển thị thông báo đăng ký thành công từ param nếu có -->
             <div th:if="${param.registrationSuccess}" class="alert alert-success">
                 <span>Đăng ký thành công! Vui lòng đăng nhập.</span>
             </div>
 
-            <form method="post" th:action="@{/j_spring_security_check}">
+            <form method="post" th:action="@{/login}" th:object="${loginRequest}">
                 <div class="form-group">
-                    <label for="j_username">Email</label>
-                    <input type="email" id="j_username" name="j_username" placeholder="Nhập địa chỉ email" required>
+                    <label for="email">Email</label>
+                    <input type="email" id="email" th:field="*{email}" placeholder="Nhập địa chỉ email" required>
+                    <span th:if="${#fields.hasErrors('email')}" th:errors="*{email}" class="error-message"></span>
                 </div>
 
                 <div class="form-group">
-                    <label for="j_password">Mật Khẩu</label>
-                    <input type="password" id="j_password" name="j_password" placeholder="Nhập mật khẩu" required>
+                    <label for="password">Mật Khẩu</label>
+                    <input type="password" id="password" th:field="*{password}" placeholder="Nhập mật khẩu" required>
+                    <span th:if="${#fields.hasErrors('password')}" th:errors="*{password}" class="error-message"></span>
                 </div>
 
                 <div class="forgot-password">

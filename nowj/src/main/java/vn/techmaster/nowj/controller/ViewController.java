@@ -20,17 +20,6 @@ public class ViewController {
         this.contractInfoService = contractInfoService;
     }
 
-    @GetMapping("/dashboard")
-    public String getDashboardPage(Model model) {
-        model.addAttribute("contractCount", contractInfoService.getAllContracts().size());
-        model.addAttribute("recentContracts", contractInfoService.getAllContracts());
-        model.addAttribute("lowRisksCount", contractInfoService.getAllLowRisks());
-        model.addAttribute("mediumRisksCount", contractInfoService.getAllMediumRisks());
-        model.addAttribute("highRisksCount", contractInfoService.getAllHighRisks());
-
-        return "dashboard";
-    }
-
     @GetMapping("/upload")
     public String getUploadPage() {
         return "contract-upload";

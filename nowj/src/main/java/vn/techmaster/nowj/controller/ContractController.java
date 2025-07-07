@@ -32,7 +32,7 @@ public class ContractController {
     @PostMapping("/upload-file")
     public ResponseEntity<?> uploadContract(@RequestParam("file") MultipartFile file) {
         ResponseDTO responseDTO = new ResponseDTO();
-        if (file.isEmpty() || file.getSize() == 0 || file == null) {
+        if (file.isEmpty() || file.getSize() == 0) {
             throw new BadRequestException("File is empty or invalid");
         }
         ContractInfo saved = contractInfoService.saveContractFile(file);
@@ -44,7 +44,7 @@ public class ContractController {
     @PostMapping("/upload-image")
     public ResponseEntity<?> uploadImage(@RequestParam("image") MultipartFile file) {
         ResponseDTO responseDTO = new ResponseDTO();
-        if (file.isEmpty() || file.getSize() == 0 || file == null) {
+        if (file.isEmpty() || file.getSize() == 0) {
             throw new BadRequestException("File is empty or invalid");
         }
         ContractInfo saved = contractInfoService.saveContractImage(file);
