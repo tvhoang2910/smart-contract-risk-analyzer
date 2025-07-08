@@ -23,6 +23,9 @@ import jakarta.validation.Valid;
 @Controller
 public class WebAuthController {
 
+    private static final String LOGIN_VIEW = "login";
+    private static final String REGISTER_VIEW = "register";
+
     private final AuthenticationManager authenticationManager;
     private final JwtTokenProvider jwtTokenProvider;
     private final UserService userService;
@@ -38,7 +41,7 @@ public class WebAuthController {
     @GetMapping("/login")
     public String loginPage(Model model) {
         model.addAttribute("loginRequest", new LoginRequest());
-        return "login";
+        return LOGIN_VIEW;
     }
 
     @PostMapping("/login")
@@ -48,7 +51,7 @@ public class WebAuthController {
             Model model) {
 
         if (bindingResult.hasErrors()) {
-            return "login";
+            return LOGIN_VIEW;
         }
 
         try {
@@ -70,14 +73,14 @@ public class WebAuthController {
             return "redirect:/dashboard";
         } catch (AuthenticationException e) {
             model.addAttribute("error", "Email hoặc mật khẩu không đúng");
-            return "login";
+            return LOGIN_VIEW;
         }
     }
 
     @GetMapping("/register")
     public String registerPage(Model model) {
         model.addAttribute("registrationRequest", new RegistrationRequestDTO());
-        return "register";
+        return REGISTER_VIEW;
     }
 
     @PostMapping("/register")
@@ -86,24 +89,24 @@ public class WebAuthController {
             Model model) {
 
         if (bindingResult.hasErrors()) {
-            return "register";
+            return REGISTER_VIEW;
         }
 
         // Kiểm tra mật khẩu khớp
         if (!registrationRequest.getPassword().equals(registrationRequest.getConfirmPassword())) {
             bindingResult
                     .addError(new FieldError("registrationRequest", "confirmPassword", "Mật khẩu xác nhận không khớp"));
-            return "register";
+            return REGISTER_VIEW;
         }
 
         try {
             userService.registerUser(registrationRequest);
             model.addAttribute("successMessage", "Đăng ký thành công! Vui lòng đăng nhập.");
             model.addAttribute("loginRequest", new LoginRequest());
-            return "login";
+            return LOGIN_VIEW;
         } catch (IllegalArgumentException e) {
             model.addAttribute("error", e.getMessage());
-            return "register";
+            return REGISTER_VIEW;
         }
     }
 

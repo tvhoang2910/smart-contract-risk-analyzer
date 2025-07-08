@@ -173,12 +173,14 @@ Trong file `src/main/resources/application.properties`:
 
 ```properties
 # JWT Configuration
-jwt.secret=mySecretKey123456789012345678901234567890
+jwt.secret=mySecretKeyForJWTTokenGenerationThatIsLongEnoughForHS256AlgorithmAndShouldBeAtLeast32Characters
 jwt.expiration-ms=86400000
 ```
 
 - **jwt.secret**: Khóa bí mật để ký JWT (nên dùng khóa mạnh hơn trong production)
 - **jwt.expiration-ms**: Thời gian hết hạn token (24h = 86400000ms)
+
+> **Lưu ý**: Các thuộc tính JWT được quản lý thông qua lớp `JwtProperties` với `@ConfigurationProperties` để đảm bảo type safety và IDE support tốt hơn.
 
 ## 🐛 Troubleshooting
 
