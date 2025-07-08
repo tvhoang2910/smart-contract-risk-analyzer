@@ -5,6 +5,7 @@ import io.jsonwebtoken.security.Keys;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.userdetails.User;
 import org.springframework.stereotype.Component;
 import vn.techmaster.nowj.config.JwtProperties;
 
@@ -29,8 +30,7 @@ public class JwtTokenProvider {
 
     // Tạo JWT từ thông tin người dùng
     public String generateToken(Authentication authentication) {
-        org.springframework.security.core.userdetails.User userPrincipal = (org.springframework.security.core.userdetails.User) authentication
-                .getPrincipal();
+        User userPrincipal = (User) authentication.getPrincipal();
         Date now = new Date();
         Date expiryDate = new Date(now.getTime() + jwtProperties.getExpirationMs());
 

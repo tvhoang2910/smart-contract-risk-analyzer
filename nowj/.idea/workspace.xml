@@ -4,7 +4,13 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="0582a720-cda0-4d37-85a4-77ea6884743a" name="Changes" comment="feat: Implement JWT authentication and authorization&#10;&#10;- Added JWT dependencies to pom.xml for token generation and validation.&#10;- Refactored SecurityConfig to integrate JWT authentication.&#10;- Created JwtAuthController for handling login and registration via API.&#10;- Implemented JwtTokenProvider for generating and validating JWT tokens.&#10;- Added JwtAuthenticationFilter to intercept requests and validate JWT.&#10;- Created JwtAuthenticationEntryPoint for handling unauthorized access.&#10;- Developed TestJwtController for testing public and protected endpoints.&#10;- Removed AuthController and integrated its functionality into WebAuthController.&#10;- Updated login.html to display error messages and success notifications.&#10;- Created DashboardController to manage dashboard data retrieval.&#10;- Added comprehensive usage documentation in HƯỚNG_DẪN_SỬ_DỤNG.md." />
+    <list default="true" id="0582a720-cda0-4d37-85a4-77ea6884743a" name="Changes" comment="">
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/vn/techmaster/nowj/constant/SystemConstant.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/vn/techmaster/nowj/constant/SystemConstant.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/vn/techmaster/nowj/security/JwtTokenProvider.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/vn/techmaster/nowj/security/JwtTokenProvider.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/vn/techmaster/nowj/service/CustomUserDetailsService.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/vn/techmaster/nowj/service/CustomUserDetailsService.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/vn/techmaster/nowj/service/impl/CustomUserDetailService.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/vn/techmaster/nowj/service/impl/CustomUserDetailService.java" afterDir="false" />
+    </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -87,7 +93,8 @@
       <workItem from="1748080491840" duration="142000" />
       <workItem from="1748245522188" duration="394000" />
       <workItem from="1751637129730" duration="7662000" />
-      <workItem from="1751944751499" duration="3558000" />
+      <workItem from="1751944751499" duration="4486000" />
+      <workItem from="1751992898984" duration="606000" />
     </task>
     <task id="LOCAL-00001" summary="feat: Implement JWT authentication and authorization&#10;&#10;- Added JWT dependencies to pom.xml for token generation and validation.&#10;- Refactored SecurityConfig to integrate JWT authentication.&#10;- Created JwtAuthController for handling login and registration via API.&#10;- Implemented JwtTokenProvider for generating and validating JWT tokens.&#10;- Added JwtAuthenticationFilter to intercept requests and validate JWT.&#10;- Created JwtAuthenticationEntryPoint for handling unauthorized access.&#10;- Developed TestJwtController for testing public and protected endpoints.&#10;- Removed AuthController and integrated its functionality into WebAuthController.&#10;- Updated login.html to display error messages and success notifications.&#10;- Created DashboardController to manage dashboard data retrieval.&#10;- Added comprehensive usage documentation in HƯỚNG_DẪN_SỬ_DỤNG.md.">
       <option name="closed" value="true" />

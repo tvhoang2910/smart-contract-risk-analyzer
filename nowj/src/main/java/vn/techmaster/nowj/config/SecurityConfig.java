@@ -43,10 +43,12 @@ public class SecurityConfig {
                         .requestMatchers("/").permitAll()
                         .requestMatchers("/api/auth/**").permitAll()
                         .requestMatchers("/api/test/public").permitAll()
+                        // Dashboard access check will be handled in WebAuthController
+                        .requestMatchers("/dashboard").authenticated()
                         // Admin only endpoints
-                        .requestMatchers("/api/test/admin").hasRole("ADMIN")
+                        .requestMatchers("/api/test/admin", "/admin/dashboard").hasRole("ADMIN")
                         // Authenticated endpoints - any authenticated user can access
-                        .requestMatchers("/dashboard", "/upload", "/conversation/**", "/settings").authenticated()
+                        .requestMatchers("/upload", "/conversation/**", "/settings").authenticated()
                         // All other endpoints require authentication
                         .anyRequest().authenticated())
                 .exceptionHandling(exceptions -> exceptions

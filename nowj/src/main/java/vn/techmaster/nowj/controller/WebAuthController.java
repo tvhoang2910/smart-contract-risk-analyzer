@@ -6,6 +6,7 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
@@ -13,6 +14,8 @@ import org.springframework.validation.FieldError;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import vn.techmaster.nowj.constant.SystemConstant;
 import vn.techmaster.nowj.model.dto.LoginRequest;
 import vn.techmaster.nowj.model.dto.RegistrationRequestDTO;
 import vn.techmaster.nowj.security.JwtTokenProvider;
@@ -39,8 +42,13 @@ public class WebAuthController {
     }
 
     @GetMapping("/login")
-    public String loginPage(Model model) {
+    public String loginPage(Model model, @RequestParam(value = "unauthorized", required = false) String unauthorized) {
         model.addAttribute("loginRequest", new LoginRequest());
+
+        if ("true".equals(unauthorized)) {
+            model.addAttribute("error", "You are not authorized");
+        }
+
         return LOGIN_VIEW;
     }
 
@@ -70,7 +78,9 @@ public class WebAuthController {
             jwtCookie.setMaxAge(24 * 60 * 60); // 24 hours
             response.addCookie(jwtCookie);
 
-            return "redirect:/dashboard";
+            // Phân quyền redirect theo role
+            String redirectUrl = determineRedirectUrl(authentication);
+            return "redirect:" + redirectUrl;
         } catch (AuthenticationException e) {
             model.addAttribute("error", "Email hoặc mật khẩu không đúng");
             return LOGIN_VIEW;
@@ -125,5 +135,35 @@ public class WebAuthController {
         response.addCookie(jwtCookie);
 
         return "redirect:/login?logout=true";
+    }
+
+    @GetMapping("/dashboard")
+    public String handleDashboardAccess(Model model) {
+        // Kiểm tra quyền truy cập
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+
+        if (authentication == null || !authentication.isAuthenticated()) {
+            // Nếu chưa đăng nhập, chuyển hướng về login
+            return "redirect:/login?unauthorized=true";
+        }
+
+        // Kiểm tra có phải admin không
+        boolean isAdmin = authentication.getAuthorities().stream()
+                .anyMatch(authority -> SystemConstant.ADMIN_ROLE.equals(authority.getAuthority()));
+
+        if (isAdmin) {
+            // Nếu là admin, chuyển hướng đến admin dashboard
+            return "redirect:/admin/dashboard";
+        } else {
+            // Nếu không phải admin, chuyển hướng về login với thông báo
+            return "redirect:/login?unauthorized=true";
+        }
+    }
+
+    private String determineRedirectUrl(Authentication authentication) {
+        return authentication.getAuthorities().stream()
+                .anyMatch(authority -> SystemConstant.ADMIN_ROLE.equals(authority.getAuthority()))
+                        ? SystemConstant.ADMIN_HOME
+                        : SystemConstant.HOME;
     }
 }

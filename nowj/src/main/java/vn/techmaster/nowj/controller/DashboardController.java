@@ -16,7 +16,7 @@ public class DashboardController {
         this.contractInfoService = contractInfoService;
     }
 
-    @GetMapping("/dashboard")
+    @GetMapping("/admin/dashboard")
     public String dashboardPage(Model model) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         String username = authentication.getName();
