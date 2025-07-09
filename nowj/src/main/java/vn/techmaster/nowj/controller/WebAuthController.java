@@ -1,7 +1,10 @@
 package vn.techmaster.nowj.controller;
 
 import jakarta.servlet.http.Cookie;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -26,8 +29,11 @@ import jakarta.validation.Valid;
 @Controller
 public class WebAuthController {
 
+    private static final Logger logger = LoggerFactory.getLogger(WebAuthController.class);
     private static final String LOGIN_VIEW = "login";
     private static final String REGISTER_VIEW = "register";
+    private static final String JWT_TOKEN_COOKIE_NAME = "JWT_TOKEN";
+    private static final String ERROR_ATTRIBUTE = "error";
 
     private final AuthenticationManager authenticationManager;
     private final JwtTokenProvider jwtTokenProvider;
@@ -42,11 +48,13 @@ public class WebAuthController {
     }
 
     @GetMapping("/login")
-    public String loginPage(Model model, @RequestParam(value = "unauthorized", required = false) String unauthorized) {
+    public String loginPage(Model model,
+            @RequestParam(value = "unauthorized", required = false) String unauthorized,
+            @RequestParam(value = "logout", required = false) String logout) {
         model.addAttribute("loginRequest", new LoginRequest());
 
         if ("true".equals(unauthorized)) {
-            model.addAttribute("error", "You are not authorized");
+            model.addAttribute(ERROR_ATTRIBUTE, "You are not authorized");
         }
 
         return LOGIN_VIEW;
@@ -72,7 +80,7 @@ public class WebAuthController {
             String jwt = jwtTokenProvider.generateToken(authentication);
 
             // Lưu JWT vào cookie
-            Cookie jwtCookie = new Cookie("JWT_TOKEN", jwt);
+            Cookie jwtCookie = new Cookie(JWT_TOKEN_COOKIE_NAME, jwt);
             jwtCookie.setHttpOnly(true);
             jwtCookie.setPath("/");
             jwtCookie.setMaxAge(24 * 60 * 60); // 24 hours
@@ -82,7 +90,7 @@ public class WebAuthController {
             String redirectUrl = determineRedirectUrl(authentication);
             return "redirect:" + redirectUrl;
         } catch (AuthenticationException e) {
-            model.addAttribute("error", "Email hoặc mật khẩu không đúng");
+            model.addAttribute(ERROR_ATTRIBUTE, "Email hoặc mật khẩu không đúng");
             return LOGIN_VIEW;
         }
     }
@@ -115,7 +123,7 @@ public class WebAuthController {
             model.addAttribute("loginRequest", new LoginRequest());
             return LOGIN_VIEW;
         } catch (IllegalArgumentException e) {
-            model.addAttribute("error", e.getMessage());
+            model.addAttribute(ERROR_ATTRIBUTE, e.getMessage());
             return REGISTER_VIEW;
         }
     }
@@ -126,13 +134,56 @@ public class WebAuthController {
     }
 
     @GetMapping("/logout")
-    public String logout(HttpServletResponse response) {
-        // Xóa JWT cookie
-        Cookie jwtCookie = new Cookie("JWT_TOKEN", null);
-        jwtCookie.setHttpOnly(true);
-        jwtCookie.setPath("/");
-        jwtCookie.setMaxAge(0);
-        response.addCookie(jwtCookie);
+    public String logout(HttpServletRequest request, HttpServletResponse response) {
+        logger.info("Logout requested from IP: {}", request.getRemoteAddr());
+
+        // Log existing cookies before logout
+        if (request.getCookies() != null) {
+            for (Cookie cookie : request.getCookies()) {
+                if (JWT_TOKEN_COOKIE_NAME.equals(cookie.getName())) {
+                    logger.info("Found JWT_TOKEN cookie with value: {}",
+                            cookie.getValue() != null ? "present" : "null");
+                }
+            }
+        }
+
+        // Clear security context first
+        SecurityContextHolder.clearContext();
+        logger.info("Security context cleared");
+
+        // Invalidate HTTP session (if any exists)
+        if (request.getSession(false) != null) {
+            request.getSession(false).invalidate();
+            logger.info("HTTP session invalidated");
+        }
+
+        // Xóa JWT cookie với nhiều cách khác nhau để đảm bảo
+        // Cách 1: Xóa với empty value
+        Cookie jwtCookie1 = new Cookie(JWT_TOKEN_COOKIE_NAME, "");
+        jwtCookie1.setHttpOnly(true);
+        jwtCookie1.setPath("/");
+        jwtCookie1.setMaxAge(0);
+        response.addCookie(jwtCookie1);
+
+        // Cách 2: Xóa với null value
+        Cookie jwtCookie2 = new Cookie(JWT_TOKEN_COOKIE_NAME, null);
+        jwtCookie2.setHttpOnly(true);
+        jwtCookie2.setPath("/");
+        jwtCookie2.setMaxAge(0);
+        response.addCookie(jwtCookie2);
+
+        // Cách 3: Xóa cookie mà không set HttpOnly (một số browser cần)
+        Cookie jwtCookie3 = new Cookie(JWT_TOKEN_COOKIE_NAME, "");
+        jwtCookie3.setPath("/");
+        jwtCookie3.setMaxAge(0);
+        response.addCookie(jwtCookie3);
+
+        // Thêm cache control headers để ngăn browser cache
+        response.setHeader("Cache-Control", "no-cache, no-store, must-revalidate");
+        response.setHeader("Pragma", "no-cache");
+        response.setDateHeader("Expires", 0);
+
+        logger.info("JWT_TOKEN cookies deleted with multiple methods");
 
         return "redirect:/login?logout=true";
     }

@@ -51,6 +51,12 @@ public class SecurityConfig {
                         .requestMatchers("/upload", "/conversation/**", "/settings").authenticated()
                         // All other endpoints require authentication
                         .anyRequest().authenticated())
+                .logout(logout -> logout
+                        .logoutUrl("/logout")
+                        .deleteCookies("JWT_TOKEN", "JSESSIONID")
+                        .clearAuthentication(true)
+                        .invalidateHttpSession(true)
+                        .logoutSuccessUrl("/login?logout=true"))
                 .exceptionHandling(exceptions -> exceptions
                         .authenticationEntryPoint(jwtAuthenticationEntryPoint))
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)

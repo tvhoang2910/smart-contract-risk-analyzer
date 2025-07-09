@@ -54,11 +54,18 @@ public class JwtTokenProvider {
 
     // Xác thực JWT
     public boolean validateToken(String authToken) {
+        // Kiểm tra token không null và không empty
+        if (authToken == null || authToken.trim().isEmpty() || "null".equals(authToken)) {
+            logger.debug("JWT token is null, empty, or string 'null'");
+            return false;
+        }
+
         try {
             Jwts.parser()
                     .verifyWith(getSigningKey())
                     .build()
                     .parseSignedClaims(authToken);
+            logger.debug("JWT token is valid");
             return true;
         } catch (JwtException ex) {
             logger.error("Invalid JWT token: {}", ex.getMessage());
