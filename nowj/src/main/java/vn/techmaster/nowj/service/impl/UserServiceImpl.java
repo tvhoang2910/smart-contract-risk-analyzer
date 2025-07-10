@@ -2,10 +2,12 @@ package vn.techmaster.nowj.service.impl;
 
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import vn.techmaster.nowj.entity.RoleInfo;
 import vn.techmaster.nowj.entity.UserInfo;
 import vn.techmaster.nowj.model.dto.RegistrationRequestDTO;
 import vn.techmaster.nowj.model.dto.RoleDTO;
 import vn.techmaster.nowj.model.dto.UserDTO;
+import vn.techmaster.nowj.repository.RoleRepository;
 import vn.techmaster.nowj.repository.UserRepository;
 import vn.techmaster.nowj.service.UserService;
 
@@ -15,10 +17,13 @@ import java.util.List;
 public class UserServiceImpl implements UserService {
     private final PasswordEncoder passwordEncoder;
     private final UserRepository userRepository;
+    private final RoleRepository roleRepository;
 
-    public UserServiceImpl(PasswordEncoder passwordEncoder, UserRepository userRepository) {
+    public UserServiceImpl(PasswordEncoder passwordEncoder, UserRepository userRepository,
+            RoleRepository roleRepository) {
         this.passwordEncoder = passwordEncoder;
         this.userRepository = userRepository;
+        this.roleRepository = roleRepository;
     }
 
     @Override
@@ -33,6 +38,12 @@ public class UserServiceImpl implements UserService {
         user.setEmail(registrationRequest.getEmail());
         user.setName(registrationRequest.getFullName());
         user.setPassword(passwordEncoder.encode(registrationRequest.getPassword()));
+
+        // Assign USER role to new user
+        RoleInfo userRole = roleRepository.findByCode("USER")
+                .orElseThrow(() -> new RuntimeException("Role USER not found"));
+        user.getRoles().add(userRole);
+
         userRepository.save(user);
     }
 

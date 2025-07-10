@@ -1,11 +1,15 @@
 package vn.techmaster.nowj.controller;
 
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import vn.techmaster.nowj.entity.ContractInfo;
+import vn.techmaster.nowj.entity.UserInfo;
 import vn.techmaster.nowj.model.dto.DetectedRiskDTO;
+import vn.techmaster.nowj.repository.UserRepository;
 import vn.techmaster.nowj.service.ContractInfoService;
 
 import java.util.List;
@@ -15,9 +19,11 @@ import java.util.Optional;
 public class ViewController {
 
     private final ContractInfoService contractInfoService;
+    private final UserRepository userRepository;
 
-    public ViewController(ContractInfoService contractInfoService) {
+    public ViewController(ContractInfoService contractInfoService, UserRepository userRepository) {
         this.contractInfoService = contractInfoService;
+        this.userRepository = userRepository;
     }
 
     @GetMapping("/upload")
@@ -27,8 +33,25 @@ public class ViewController {
 
     @GetMapping("/conversation")
     public String getConversationPage(Model model) {
-        model.addAttribute("contractInfos", contractInfoService.getAllContracts());
-        return "contract-conversation";
+        try {
+            // Lấy thông tin người dùng hiện tại từ Authentication
+            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+            String userEmail = authentication.getName();
+
+            // Tìm user bằng email thay vì ID số
+            Optional<UserInfo> userOptional = userRepository.findByEmail(userEmail);
+
+            if (userOptional.isEmpty()) {
+                model.addAttribute("error", "Không tìm thấy thông tin người dùng");
+                return "contract-conversation";
+            }
+
+            model.addAttribute("contractInfos", contractInfoService.getAllContracts());
+            return "contract-conversation";
+        } catch (Exception e) {
+            model.addAttribute("error", "Đã xảy ra lỗi: " + e.getMessage());
+            return "contract-conversation";
+        }
     }
 
     @GetMapping("/conversation/{id}")

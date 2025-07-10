@@ -12,8 +12,10 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.security.config.http.SessionCreationPolicy;
 import vn.techmaster.nowj.security.JwtAuthenticationEntryPoint;
 import vn.techmaster.nowj.security.JwtAuthenticationFilter;
+import vn.techmaster.nowj.security.OAuth2AuthenticationSuccessHandler;
 
 @Configuration
 @EnableWebSecurity
@@ -33,9 +35,13 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http,
             JwtAuthenticationFilter jwtAuthenticationFilter,
-            JwtAuthenticationEntryPoint jwtAuthenticationEntryPoint) throws Exception {
+            JwtAuthenticationEntryPoint jwtAuthenticationEntryPoint,
+            OAuth2AuthenticationSuccessHandler oAuth2AuthenticationSuccessHandler) throws Exception {
         return http
                 .csrf(AbstractHttpConfigurer::disable)
+                // Add stateless session management
+                .sessionManagement(session -> session
+                        .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(authorize -> authorize
                         // Public endpoints
                         .requestMatchers("/css/**", "/js/**", "/images/**").permitAll()
@@ -48,7 +54,8 @@ public class SecurityConfig {
                         // Admin only endpoints
                         .requestMatchers("/api/test/admin", "/admin/dashboard").hasRole("ADMIN")
                         // Authenticated endpoints - any authenticated user can access
-                        .requestMatchers("/upload", "/conversation/**", "/settings").authenticated()
+                        .requestMatchers("/upload", "/conversation/**", "/settings")
+                        .authenticated()
                         // All other endpoints require authentication
                         .anyRequest().authenticated())
                 .logout(logout -> logout
@@ -60,6 +67,10 @@ public class SecurityConfig {
                 .exceptionHandling(exceptions -> exceptions
                         .authenticationEntryPoint(jwtAuthenticationEntryPoint))
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
+                // Thêm cấu hình OAuth2 Login
+                .oauth2Login(oauth2 -> oauth2
+                        .loginPage("/login")
+                        .successHandler(oAuth2AuthenticationSuccessHandler))
                 .build();
     }
 }
