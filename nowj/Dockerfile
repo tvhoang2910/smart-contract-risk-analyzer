@@ -6,12 +6,14 @@ WORKDIR /app
 COPY .mvn ./.mvn
 COPY pom.xml mvnw mvnw.cmd ./
 
+# Cấp quyền thực thi cho mvnw
+RUN chmod +x mvnw
+
 # Download dependencies (better caching)
 RUN ./mvnw dependency:go-offline -B
 
 # Copy source code
 COPY src ./src
-COPY tessdata ./tessdata
 
 # Build application
 RUN ./mvnw clean package -DskipTests
