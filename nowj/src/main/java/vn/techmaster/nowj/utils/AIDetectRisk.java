@@ -14,7 +14,7 @@ import java.util.concurrent.TimeUnit;
 
 @Component
 public class AIDetectRisk {
-    private static final String API_KEY = "AIzaSyA2EUAKX9-g1azs34sYHa6euQ2hWfrfQ6A";
+    private static final String API_KEY = "AIzaSyDvUnf5CYYORBiZ30I6gAEVnxFS_8e8uRs";
     private static final String ENDPOINT = "https://generativelanguage.googleapis.com/v1/models/gemini-2.0-flash:generateContent?key="
             + API_KEY;
     private static final ObjectMapper mapper = new ObjectMapper();
